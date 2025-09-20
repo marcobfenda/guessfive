@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  wordle-app:
+    build: .
+    ports:
+      - "8081:80"
+    container_name: wordle-clone
+    restart: unless-stopped
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
