@@ -29,6 +29,7 @@ class WordleGame {
             // Fallback to a default word
             this.secretWord = 'APPLE';
         }
+        console.log("Secret Word: " + this.secretWord);
         
         // Reset game state
         this.currentGuess = '';

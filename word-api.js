@@ -114,8 +114,8 @@ class WordAPIService {
 
     // Get a random word from a specific list (for secret words)
     getRandomSecretWord() {
-        // Filter out person names from the first 100 words
-        const secretWords = this.fallbackWords.slice(0, 100).filter(word => !this.isPersonName(word));
+        // Filter out person names from the entire word list for better variety
+        const secretWords = this.fallbackWords.filter(word => !this.isPersonName(word));
         
         if (secretWords.length === 0) {
             // Fallback to any word if all are person names (shouldn't happen)
