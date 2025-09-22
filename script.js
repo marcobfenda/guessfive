@@ -11,6 +11,7 @@ class WordleGame {
         this.currentRow = 0;
         this.gameOver = false;
         this.gameWon = false;
+        this.letterStatus = {}; // Track status of each letter: 'correct', 'present', 'absent', or undefined
         
         this.initializeGame();
         this.setupEventListeners();
@@ -35,9 +36,13 @@ class WordleGame {
         this.currentRow = 0;
         this.gameOver = false;
         this.gameWon = false;
+        this.letterStatus = {};
         
         // Create the game grid
         this.createGrid();
+        
+        // Create the letter tracker
+        this.createLetterTracker();
         
         // Clear messages
         this.hideMessage();
@@ -60,6 +65,21 @@ class WordleGame {
                 const tile = $('<div>').addClass('tile').attr('data-row', row).attr('data-col', col);
                 grid.append(tile);
             }
+        }
+    }
+    
+    createLetterTracker() {
+        const tracker = $('#letter-tracker-grid');
+        tracker.empty();
+        
+        // Create tiles for letters A-Z
+        for (let i = 0; i < 26; i++) {
+            const letter = String.fromCharCode(65 + i); // A-Z
+            const tile = $('<div>')
+                .addClass('letter-tracker-tile')
+                .attr('data-letter', letter)
+                .text(letter);
+            tracker.append(tile);
         }
     }
     
@@ -180,6 +200,9 @@ class WordleGame {
         // Update tiles with feedback
         this.updateTilesWithFeedback(feedback);
         
+        // Update letter tracker
+        this.updateLetterTracker(guess, feedback);
+        
         this.currentRow++;
     }
     
@@ -221,6 +244,41 @@ class WordleGame {
             setTimeout(() => {
                 tile.addClass(feedback[col]);
             }, col * 100);
+        }
+    }
+    
+    updateLetterTracker(guess, feedback) {
+        const guessLetters = guess.split('');
+        
+        for (let i = 0; i < 5; i++) {
+            const letter = guessLetters[i];
+            const status = feedback[i];
+            
+            // Update letter status - prioritize correct > present > absent
+            if (!this.letterStatus[letter] || 
+                (this.letterStatus[letter] === 'absent' && status !== 'absent') ||
+                (this.letterStatus[letter] === 'present' && status === 'correct')) {
+                this.letterStatus[letter] = status;
+            }
+        }
+        
+        // Update the visual display
+        this.updateLetterTrackerDisplay();
+    }
+    
+    updateLetterTrackerDisplay() {
+        for (const letter in this.letterStatus) {
+            const tile = $(`.letter-tracker-tile[data-letter="${letter}"]`);
+            const status = this.letterStatus[letter];
+            
+            // Remove all status classes
+            tile.removeClass('used correct present absent');
+            
+            // Add the appropriate class
+            if (status) {
+                tile.addClass('used');
+                tile.addClass(status);
+            }
         }
     }
     

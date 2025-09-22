@@ -2,6 +2,13 @@
 class WordAPIService {
     constructor() {
         this.apiBase = 'https://api.dictionaryapi.dev/api/v2/entries/en';
+        
+        // Common person names to exclude from secret words
+        this.personNames = new Set([
+            'BILLY', 'HARRY', 'JIMMY', 'JONES', 'LEWIS', 'MARIA', 'PETER', 'ROBIN', 'ROGER', 
+            'SMITH', 'TERRY', 'TYLER', 'FRANK', 'JAPAN', 'TEXAS', 'ROMAN', 'WELSH'
+        ]);
+        
         this.fallbackWords = [
             'APPLE', 'BRAIN', 'CHAIR', 'DANCE', 'EARTH', 'FRUIT', 'GRASS', 'HAPPY', 'IDEAS', 'JUICE',
             'KNIFE', 'LIGHT', 'MUSIC', 'NIGHT', 'OCEAN', 'PAPER', 'QUEEN', 'RIVER', 'SMART', 'TIGER',
@@ -100,9 +107,22 @@ class WordAPIService {
         }
     }
 
+    // Check if a word is a person name
+    isPersonName(word) {
+        return this.personNames.has(word.toUpperCase());
+    }
+
     // Get a random word from a specific list (for secret words)
     getRandomSecretWord() {
-        const secretWords = this.fallbackWords.slice(0, 100); // Use first 100 as secret words
+        // Filter out person names from the first 100 words
+        const secretWords = this.fallbackWords.slice(0, 100).filter(word => !this.isPersonName(word));
+        
+        if (secretWords.length === 0) {
+            // Fallback to any word if all are person names (shouldn't happen)
+            const randomIndex = Math.floor(Math.random() * this.fallbackWords.length);
+            return this.fallbackWords[randomIndex];
+        }
+        
         const randomIndex = Math.floor(Math.random() * secretWords.length);
         return secretWords[randomIndex];
     }

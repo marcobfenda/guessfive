@@ -59,7 +59,7 @@ body {
 }
 
 .game-title {
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 700;
     margin: 0 0 0.5rem 0;
     letter-spacing: 0.1em;
@@ -95,17 +95,23 @@ body {
 .streak-counter {
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    align-items: center;
+    gap: 1rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
 .streak-item {
     text-align: center;
     background: var(--background-secondary);
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
-    min-width: 120px;
+    min-width: 100px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     transition: var(--transition);
 }
 
@@ -119,19 +125,21 @@ body {
     font-size: 0.875rem;
     color: var(--text-secondary);
     font-weight: 500;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.1rem;
+    line-height: 1.25;
 }
 
 .streak-value {
     display: block;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--primary-color);
+    line-height: 1;
 }
 
 /* Game Board */
 .game-board {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     display: flex;
     justify-content: center;
 }
@@ -139,8 +147,8 @@ body {
 .game-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    max-width: 320px;
+    gap: 6px;
+    max-width: 256px;
     width: 100%;
 }
 
@@ -151,7 +159,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
+    font-size: 1.4rem;
     font-weight: 600;
     text-transform: uppercase;
     background-color: var(--background-primary);
@@ -219,6 +227,72 @@ body {
         border-color: var(--text-primary);
         box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.3);
     }
+}
+
+/* Letter Tracker */
+.letter-tracker {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.letter-tracker-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.letter-tracker-grid {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 3px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.letter-tracker-tile {
+    aspect-ratio: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background-color: var(--background-primary);
+    color: var(--text-secondary);
+    transition: var(--transition);
+    min-height: 20px;
+}
+
+.letter-tracker-tile.used {
+    border-color: #878a8c;
+    background-color: #f3f4f6;
+    color: var(--text-primary);
+}
+
+.letter-tracker-tile.correct {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
+}
+
+.letter-tracker-tile.present {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+}
+
+.letter-tracker-tile.absent {
+    background-color: var(--absent-color);
+    border-color: var(--absent-color);
+    color: white;
+    box-shadow: 0 0 0 1px rgba(107, 114, 128, 0.3);
 }
 
 /* Input Section */
@@ -329,37 +403,34 @@ body {
     border: 1px solid #bee5eb;
 }
 
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-}
-
-.new-game-btn {
+/* New Game Button in Header */
+.streak-counter .new-game-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
+    padding: 0.75rem 1rem;
     background: transparent;
     border: 2px solid var(--primary-color);
     border-radius: var(--border-radius);
     color: var(--primary-color);
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
     box-shadow: var(--shadow-sm);
+    min-width: 100px;
+    height: 60px;
+    justify-content: center;
 }
 
-.new-game-btn:hover {
+.streak-counter .new-game-btn:hover {
     background: var(--primary-color);
     color: white;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
-.new-game-btn:active {
+.streak-counter .new-game-btn:active {
     transform: translateY(0);
     box-shadow: var(--shadow-sm);
 }
@@ -393,16 +464,26 @@ body {
     }
     
     .game-title {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
     }
     
     .game-grid {
-        max-width: 280px;
-        gap: 6px;
+        max-width: 224px;
+        gap: 5px;
     }
     
     .tile {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .letter-tracker-grid {
+        max-width: 280px;
+        gap: 2px;
+    }
+    
+    .letter-tracker-tile {
+        font-size: 0.65rem;
+        min-height: 18px;
     }
     
     .guess-input {
@@ -423,16 +504,26 @@ body {
 
 @media (max-width: 480px) {
     .game-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
     
     .game-grid {
-        max-width: 240px;
-        gap: 4px;
+        max-width: 192px;
+        gap: 3px;
     }
     
     .tile {
-        font-size: 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .letter-tracker-grid {
+        max-width: 240px;
+        gap: 1px;
+    }
+    
+    .letter-tracker-tile {
+        font-size: 0.6rem;
+        min-height: 16px;
     }
     
     .input-container {
@@ -475,16 +566,24 @@ input:focus-visible {
 /* Responsive styles for streak counter */
 @media (max-width: 640px) {
     .streak-counter {
-        gap: 1rem;
+        gap: 0.75rem;
     }
     
     .streak-item {
-        min-width: 100px;
-        padding: 0.5rem 0.75rem;
+        min-width: 80px;
+        padding: 0.4rem 0.75rem;
+        height: 50px;
     }
     
     .streak-value {
-        font-size: 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .streak-counter .new-game-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        min-width: 80px;
+        height: 50px;
     }
 }
 
@@ -497,5 +596,10 @@ input:focus-visible {
     .streak-item {
         min-width: auto;
         width: 100%;
+    }
+    
+    .streak-counter .new-game-btn {
+        width: 100%;
+        min-width: auto;
     }
 }
