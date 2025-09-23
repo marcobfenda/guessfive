@@ -76,10 +76,13 @@ class WordAPIService {
         // Then try API validation for additional words
         try {
             const response = await fetch(`${this.apiBase}/${word.toLowerCase()}`);
-            return response.ok;
+            if (!response.ok) {
+                // 404 means word not found, which is expected for invalid words
+                return false;
+            }
+            return true;
         } catch (error) {
-            console.warn('API validation failed, using fallback:', error);
-            // If API fails, only accept words from our fallback list
+            // Network or other errors - only accept words from our fallback list
             return false;
         }
     }

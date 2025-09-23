@@ -48,6 +48,9 @@ class WordleGame {
         // Clear messages
         this.hideMessage();
         
+        // Enable input for new game
+        this.enableInput();
+        
         // Focus input for immediate typing
         setTimeout(() => {
             $('#guess-input').focus();
@@ -139,6 +142,12 @@ class WordleGame {
         for (let col = 0; col < this.currentGuess.length; col++) {
             const tile = $(`.tile[data-row="${this.currentRow}"][data-col="${col}"]`);
             tile.addClass('current').text(this.currentGuess[col]);
+            
+            // Add bounce animation for new letters
+            tile.addClass('bounce');
+            setTimeout(() => {
+                tile.removeClass('bounce');
+            }, 300);
         }
     }
     
@@ -151,12 +160,19 @@ class WordleGame {
         this.showLoading();
         
         // Validate guess using API
-        const isValid = await this.isValidGuess(guess);
-        if (!isValid) {
+        const validationResult = await this.validateGuess(guess);
+        if (!validationResult.isValid) {
             this.hideLoading();
-            this.showMessage('Please enter a valid 5-letter English word!', 'danger');
+            this.showMessage(validationResult.message, 'danger');
             $('#guess-input').addClass('shake');
             setTimeout(() => $('#guess-input').removeClass('shake'), 500);
+            
+            // Shake the current row tiles
+            for (let col = 0; col < 5; col++) {
+                const tile = $(`.tile[data-row="${this.currentRow}"][data-col="${col}"]`);
+                tile.addClass('shake');
+                setTimeout(() => tile.removeClass('shake'), 500);
+            }
             return;
         }
         
@@ -181,17 +197,45 @@ class WordleGame {
         this.checkGameState();
     }
     
-    async isValidGuess(guess) {
+    async validateGuess(guess) {
         // Check if it's exactly 5 letters and contains only letters
         const isValidLength = guess.length === 5;
         const isValidFormat = /^[A-Z]+$/.test(guess);
         
         if (!isValidLength || !isValidFormat) {
-            return false;
+            return {
+                isValid: false,
+                message: 'Please enter a valid 5-letter English word!'
+            };
+        }
+        
+        // Check if word has already been used in this game
+        const alreadyUsed = this.guesses.some(guessObj => guessObj.word === guess);
+        if (alreadyUsed) {
+            return {
+                isValid: false,
+                message: 'You have already used this word! Try a different one.'
+            };
         }
         
         // Use API to validate if it's a real word
-        return await this.wordAPI.isValidWord(guess);
+        const isRealWord = await this.wordAPI.isValidWord(guess);
+        if (!isRealWord) {
+            return {
+                isValid: false,
+                message: 'Please enter a valid 5-letter English word!'
+            };
+        }
+        
+        return {
+            isValid: true,
+            message: ''
+        };
+    }
+    
+    async isValidGuess(guess) {
+        const result = await this.validateGuess(guess);
+        return result.isValid;
     }
     
     processGuess(guess) {
@@ -241,10 +285,14 @@ class WordleGame {
             tile.removeClass('current');
             tile.addClass('filled');
             
-            // Add feedback class with delay for animation
+            // Add flip animation with individual delay for each tile
             setTimeout(() => {
-                tile.addClass(feedback[col]);
-            }, col * 100);
+                tile.addClass('flip');
+                // Add feedback class after flip animation starts
+                setTimeout(() => {
+                    tile.addClass(feedback[col]);
+                }, 300); // Halfway through the flip animation
+            }, col * 200); // 200ms delay between each tile for individual rotation
         }
     }
     
@@ -297,27 +345,125 @@ class WordleGame {
             this.showMessage(`Game Over! The word was: ${this.secretWord}`, 'danger');
         }
         
+        // Disable input if game is over
+        if (this.gameOver) {
+            this.disableInput();
+        }
+        
         // Update streak display after game ends
         this.updateStreakDisplay();
     }
     
     showMessage(text, type = 'info') {
-        const messageArea = $('#message-area');
-        messageArea.removeClass('alert-success alert-danger alert-info')
-                  .addClass(`alert-${type}`)
-                  .text(text)
-                  .show();
-        
-        // Auto-hide after 5 seconds for non-error messages
-        if (type !== 'danger') {
-            setTimeout(() => {
-                this.hideMessage();
-            }, 5000);
-        }
+        this.showToast(text, type);
     }
     
     hideMessage() {
-        $('#message-area').hide();
+        // Toast notifications auto-hide, so this method is kept for compatibility
+    }
+    
+    showToast(text, type = 'info', duration = 5000) {
+        const container = $('#toast-container');
+        
+        if (container.length === 0) {
+            console.error('Toast container not found!');
+            return;
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        
+        // Map message types to toast types
+        const toastTypeMap = {
+            'success': 'success',
+            'danger': 'error',
+            'error': 'error',
+            'info': 'info'
+        };
+        
+        const toastType = toastTypeMap[type] || 'info';
+        
+        // Get appropriate icon
+        const iconMap = {
+            'success': 'fas fa-check-circle',
+            'error': 'fas fa-exclamation-circle',
+            'info': 'fas fa-info-circle'
+        };
+        
+        const icon = iconMap[toastType];
+        
+        // Create toast HTML
+        const toastHtml = `
+            <div id="${toastId}" class="toast ${toastType}">
+                <i class="toast-icon ${icon}"></i>
+                <div class="toast-content">${text}</div>
+                <button class="toast-close" data-toast-id="${toastId}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add toast to container
+        container.append(toastHtml);
+        
+        // Force styles with inline CSS to override any conflicts
+        const addedToast = $(`#${toastId}`);
+        
+        // Set base styles
+        const baseStyles = {
+            'position': 'relative',
+            'display': 'flex',
+            'width': '300px',
+            'height': 'auto',
+            'padding': '1rem',
+            'border-radius': '8px',
+            'z-index': '1001',
+            'opacity': '1',
+            'visibility': 'visible',
+            'transform': 'none',
+            'box-sizing': 'border-box',
+            'flex-shrink': '0',
+            'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+            'align-items': 'center',
+            'gap': '0.75rem'
+        };
+        
+        // Set type-specific styles
+        if (toastType === 'success') {
+            baseStyles.background = 'linear-gradient(135deg, #d1fae5, #a7f3d0)';
+            baseStyles.color = '#065f46';
+            baseStyles.borderLeft = '4px solid #10b981';
+        } else if (toastType === 'error') {
+            baseStyles.background = 'linear-gradient(135deg, #fee2e2, #fecaca)';
+            baseStyles.color = '#991b1b';
+            baseStyles.borderLeft = '4px solid #ef4444';
+        } else { // info
+            baseStyles.background = 'linear-gradient(135deg, #dbeafe, #bfdbfe)';
+            baseStyles.color = '#1e40af';
+            baseStyles.borderLeft = '4px solid #3b82f6';
+        }
+        
+        addedToast.css(baseStyles);
+        
+        // Add click handler for close button
+        $(`#${toastId} .toast-close`).on('click', () => {
+            this.hideToast(toastId);
+        });
+        
+        // Auto-hide after duration (except for errors which stay longer)
+        const autoHideDuration = type === 'danger' || type === 'error' ? 8000 : duration;
+        setTimeout(() => {
+            this.hideToast(toastId);
+        }, autoHideDuration);
+    }
+    
+    hideToast(toastId) {
+        const toast = $(`#${toastId}`);
+        if (toast.length) {
+            toast.addClass('hiding');
+            setTimeout(() => {
+                toast.remove();
+            }, 300); // Match animation duration
+        }
     }
     
     showLoading() {
@@ -330,6 +476,16 @@ class WordleGame {
         $('#guess-input').prop('disabled', false);
     }
     
+    disableInput() {
+        $('#guess-input').prop('disabled', true).addClass('disabled');
+        $('#submit-btn').prop('disabled', true).addClass('disabled');
+    }
+    
+    enableInput() {
+        $('#guess-input').prop('disabled', false).removeClass('disabled');
+        $('#submit-btn').prop('disabled', false).removeClass('disabled');
+    }
+    
     updateStreakDisplay() {
         const stats = this.streakManager.getStats();
         $('#current-streak').text(stats.currentStreak);
@@ -339,7 +495,8 @@ class WordleGame {
 
 // Initialize the game when the page loads
 $(document).ready(() => {
-    const game = new WordleGame();
+    window.game = new WordleGame();
+    
     
     // Add some keyboard shortcuts
     $(document).on('keydown', (e) => {
